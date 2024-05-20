@@ -58,34 +58,41 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
-
-        fetch('frames.txt')
+    
+        fetch('file_renaming_records.csv')
             .then(response => response.text())
             .then(data => {
-                const images = data.trim().split('\n');
+                const lines = data.trim().split('\n');
+                const images = lines.slice(1).map(line => {
+                    const columns = line.split(',');
+                    return {
+                        new_name: columns[2],
+                        new_path: columns[3],
+                        youtube_id: columns[0]
+                    };
+                });
                 shuffleArray(images);
                 const sampleImages = images.slice(0, 20);
                 const gallery = document.getElementById('gallery');
-
+    
                 sampleImages.forEach(image => {
                     const container = document.createElement('div');
                     container.className = "image-container";
-
+    
                     const imgElement = document.createElement('img');
-                    imgElement.src = `./frames/${image}`;
-                    imgElement.alt = image;
+                    imgElement.src = `./${image.new_path}`;
+                    imgElement.alt = image.new_name;
                     imgElement.className = "w-full h-auto rounded-lg shadow-lg";
-
-                    const videoId = image.split('_frame')[0];
+    
                     const link = document.createElement('a');
-                    link.href = `https://www.youtube.com/watch?v=${videoId}`;
+                    link.href = `https://www.youtube.com/watch?v=${image.youtube_id}`;
                     link.target = "_blank";
                     link.title = `Watch on YouTube`;
-
+    
                     const overlay = document.createElement('div');
                     overlay.className = "overlay";
                     overlay.textContent = "Watch Video";
-
+    
                     link.appendChild(imgElement);
                     container.appendChild(link);
                     container.appendChild(overlay);
