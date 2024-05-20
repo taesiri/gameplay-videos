@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Gameplay Images</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+        .image-container {
+            position: relative;
+            cursor: pointer;
+        }
+        .image-container img:hover {
+            transform: scale(1.05);
+            transition: transform 0.5s ease;
+        }
+        .image-container .overlay {
+            position: absolute;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+            color: #fff;
+            width: 100%;
+            transition: .5s ease;
+            opacity:0;
+            color: white;
+            font-size: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+        .image-container:hover .overlay {
+            opacity: 1;
+        }
+        footer {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 0.8rem;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div class="container mx-auto py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Random Gameplay Images</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="gallery"></div>
+    </div>
+    <footer>
+        Just some random gameplay images from YouTube videos.
+    </footer>
+    <script>
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        fetch('frames.txt')
+            .then(response => response.text())
+            .then(data => {
+                const images = data.trim().split('\n');
+                shuffleArray(images);
+                const sampleImages = images.slice(0, 20);
+                const gallery = document.getElementById('gallery');
+
+                sampleImages.forEach(image => {
+                    const container = document.createElement('div');
+                    container.className = "image-container";
+
+                    const imgElement = document.createElement('img');
+                    imgElement.src = `./frames/${image}`;
+                    imgElement.alt = image;
+                    imgElement.className = "w-full h-auto rounded-lg shadow-lg";
+
+                    const videoId = image.split('_frame')[0];
+                    const link = document.createElement('a');
+                    link.href = `https://www.youtube.com/watch?v=${videoId}`;
+                    link.target = "_blank";
+                    link.title = `Watch on YouTube`;
+
+                    const overlay = document.createElement('div');
+                    overlay.className = "overlay";
+                    overlay.textContent = "Watch Video";
+
+                    link.appendChild(imgElement);
+                    container.appendChild(link);
+                    container.appendChild(overlay);
+                    gallery.appendChild(container);
+                });
+            });
+    </script>
+</body>
+
+</html>
