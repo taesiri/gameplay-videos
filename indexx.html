@@ -45,14 +45,12 @@
             width: 32px;
             height: 32px;
             background-color: rgba(0, 0, 0, 0.6);
-            /* Darker background for better visibility */
             border: none;
             border-radius: 50%;
             cursor: pointer;
             padding: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             color: white;
-            /* White icon color */
             transition: background-color 0.3s, transform 0.3s;
             display: flex;
             justify-content: center;
@@ -61,16 +59,67 @@
 
         .icon-button i {
             pointer-events: none;
-            /* Prevents the icon from interfering with the button's click event */
             font-size: 14px;
-            /* Smaller icon size */
         }
 
         .icon-button:hover {
             background-color: #007bff;
-            /* Blue background on hover */
             transform: scale(1.1);
-            /* Slightly larger on hover */
+        }
+
+        .checkbox-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
+        .image-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            position: relative;
+            top: 4px;
+            appearance: none;
+            outline: none;
+            background-color: #fff;
+            border: 2px solid #666;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .image-checkbox:checked {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .image-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 1px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+
+        #copySelected {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #copySelected:hover {
+            background-color: #333;
         }
 
         footer {
@@ -86,6 +135,9 @@
     <div class="container mx-auto py-8">
         <h1 class="text-3xl font-bold text-center mb-8">Random Gameplay Images - Part II</h1>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="gallery"></div>
+        <button id="copySelected">
+            Copy Selected Images
+        </button>
     </div>
     <footer>
         Just some random gameplay images from YouTube videos - Part II.
@@ -100,11 +152,17 @@
 
         function copyToClipboard(text, button) {
             navigator.clipboard.writeText(text).then(() => {
-                button.style.backgroundColor = '#4CAF50'; // Change color to green on success
+                button.style.backgroundColor = '#4CAF50';
             }).catch(err => {
-                button.style.backgroundColor = '#f44336'; // Change color to red on failure
+                button.style.backgroundColor = '#f44336';
                 console.error('Failed to copy: ', err);
             });
+        }
+
+        function copySelectedImages() {
+            const selectedImages = document.querySelectorAll('.image-checkbox:checked');
+            const urls = Array.from(selectedImages).map(cb => cb.getAttribute('data-url'));
+            copyToClipboard(urls.join('\n'), document.getElementById('copySelected'));
         }
 
         fetch('additional_images.csv')
@@ -132,6 +190,14 @@
                     imgElement.alt = image.new_name;
                     imgElement.className = "w-full h-auto rounded-lg shadow-lg";
 
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'image-checkbox';
+                    checkbox.setAttribute('data-url', imgElement.src);
+                    const checkboxContainer = document.createElement('div');
+                    checkboxContainer.className = 'checkbox-container';
+                    checkboxContainer.appendChild(checkbox);
+
                     const buttonContainer = document.createElement('div');
                     buttonContainer.className = "button";
 
@@ -157,9 +223,12 @@
                     buttonContainer.appendChild(watchButton);
 
                     container.appendChild(imgElement);
+                    container.appendChild(checkboxContainer);
                     container.appendChild(buttonContainer);
                     gallery.appendChild(container);
                 });
+
+                document.getElementById('copySelected').addEventListener('click', copySelectedImages);
             });
     </script>
 </body>
