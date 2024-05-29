@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image and Model Outputs Viewer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="container mx-auto px-4">
+        <h1 class="text-3xl text-center text-gray-700 my-4">Image and Model Outputs Viewer</h1>
+        <div id="content"></div>
+    </div>
+
+    <script>
+        const jsonFilePath = './model-outputs/merged_output.json';
+
+        // Fetch JSON data from the file
+        async function fetchJsonData() {
+            try {
+                console.log("Fetching JSON data from:", jsonFilePath);
+                const response = await fetch(jsonFilePath);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const jsonData = await response.json();
+                console.log("JSON data fetched successfully.");
+                return jsonData;
+            } catch (error) {
+                console.error('Error fetching JSON data:', error);
+            }
+        }
+
+        // Group data by image and then by prompt
+        function groupByImageAndPrompt(records) {
+            console.log("Grouping data by image and prompt.");
+            return records.reduce((group, record) => {
+                const imageUrl = record['Image File URL'];
+                const prompt = record['Prompt'].replace('<image>', '').trim();
+                if (!group[imageUrl]) {
+                    group[imageUrl] = {};
+                }
+                if (!group[imageUrl][prompt]) {
+                    group[imageUrl][prompt] = [];
+                }
+                group[imageUrl][prompt].push(record);
+                return group;
+            }, {});
+        }
+
+        // Render HTML content
+        function renderContent(data) {
+            console.log("Rendering content.");
+            const container = document.getElementById('content');
+            if (Object.keys(data).length === 0) {
+                console.log("No data to render.");
+                return;
+            }
+            Object.keys(data).forEach((imageUrl, index) => {
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'my-8 p-4 bg-white shadow rounded-lg';
+                imageContainer.innerHTML = `<img src="${imageUrl}" alt="Model Image" class="mx-auto">`;
+
+                const tabs = document.createElement('div');
+                tabs.className = 'tabs mt-4';
+                const tabContent = document.createElement('div');
+
+                Object.keys(data[imageUrl]).forEach((prompt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.textContent = prompt;
+                    btn.className = 'tab inline-block py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 font-semibold cursor-pointer';
+                    btn.onclick = function() { openTab(event, `tab${index}${idx}`); };
+                    tabs.appendChild(btn);
+
+                    const promptDiv = document.createElement('div');
+                    promptDiv.id = `tab${index}${idx}`;
+                    promptDiv.className = 'tabcontent hidden p-4 border border-t-0';
+                    data[imageUrl][prompt].forEach((item, modelIndex) => {
+                        const modelInfo = document.createElement('div');
+                        modelInfo.textContent = `Model: ${item['Model Path']} (${item['Model Base']})`;
+                        modelInfo.className = `font-semibold p-2 ${modelIndex % 2 === 0 ? 'bg-blue-100' : 'bg-green-100'}`;
+
+                        const responseTextDiv = document.createElement('div');
+                        responseTextDiv.textContent = item.Response.replace(/<s>|<\/s>/g, '');
+
+                        promptDiv.appendChild(modelInfo);
+                        promptDiv.appendChild(responseTextDiv);
+                    });
+                    tabContent.appendChild(promptDiv);
+                });
+
+                imageContainer.appendChild(tabs);
+                imageContainer.appendChild(tabContent);
+                container.appendChild(imageContainer);
+            });
+        }
+
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            const tablinks = document.getElementsByClassName("tab");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Main function to process data
+        async function main() {
+            console.log("Starting main function.");
+            const records = await fetchJsonData();
+            if (records) {
+                const groupedData = groupByImageAndPrompt(records);
+                renderContent(groupedData);
+            } else {
+                console.log("No records fetched.");
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>
