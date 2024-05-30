@@ -9,7 +9,7 @@
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
     <div class="container mx-auto px-4">
         <h1 class="text-3xl text-center text-gray-700 my-4">Image and Model Outputs Viewer</h1>
-        <div id="content"></div>
+        <div id="content" class="flex flex-wrap justify-center"></div>
     </div>
 
     <script>
@@ -58,19 +58,29 @@
             }
             Object.keys(data).forEach((imageUrl, index) => {
                 const imageContainer = document.createElement('div');
-                imageContainer.className = 'my-8 p-4 bg-white shadow rounded-lg';
-                imageContainer.innerHTML = `<img src="${imageUrl}" alt="Model Image" class="mx-auto">`;
+                imageContainer.className = 'flex flex-row items-start my-8 p-4 bg-white shadow rounded-lg w-full';
 
-                const tabs = document.createElement('div');
-                tabs.className = 'tabs mt-4';
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'w-1/2';
+                imgDiv.innerHTML = `<img src="${imageUrl}" alt="Model Image" class="mx-auto">`;
+                imageContainer.appendChild(imgDiv);
+
+                const textDiv = document.createElement('div');
+                textDiv.className = 'w-1/2 pl-4';
+
+                const select = document.createElement('select');
+                select.className = 'block appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline';
+                select.onchange = function() { updateTabContent(this.value); };
+
                 const tabContent = document.createElement('div');
+                tabContent.id = `tabContent${index}`;
+                tabContent.className = 'mt-4';
 
                 Object.keys(data[imageUrl]).forEach((prompt, idx) => {
-                    const btn = document.createElement('button');
-                    btn.textContent = prompt;
-                    btn.className = 'tab inline-block py-2 px-4 text-white bg-blue-500 hover:bg-blue-600 font-semibold cursor-pointer';
-                    btn.onclick = function() { openTab(event, `tab${index}${idx}`); };
-                    tabs.appendChild(btn);
+                    const option = document.createElement('option');
+                    option.value = `tab${index}${idx}`;
+                    option.textContent = prompt;
+                    select.appendChild(option);
 
                     const promptDiv = document.createElement('div');
                     promptDiv.id = `tab${index}${idx}`;
@@ -89,23 +99,19 @@
                     tabContent.appendChild(promptDiv);
                 });
 
-                imageContainer.appendChild(tabs);
-                imageContainer.appendChild(tabContent);
+                textDiv.appendChild(select);
+                textDiv.appendChild(tabContent);
+                imageContainer.appendChild(textDiv);
                 container.appendChild(imageContainer);
             });
         }
 
-        function openTab(evt, tabName) {
-            const tabcontent = document.getElementsByClassName("tabcontent");
-            for (let i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            const tablinks = document.getElementsByClassName("tab");
-            for (let i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
+        function updateTabContent(tabName) {
+            const tabcontents = document.getElementsByClassName("tabcontent");
+            for (let i = 0; i < tabcontents.length; i++) {
+                tabcontents[i].style.display = "none";
             }
             document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
         }
 
         // Main function to process data
